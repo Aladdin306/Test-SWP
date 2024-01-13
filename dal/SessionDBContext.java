@@ -5,7 +5,7 @@
 package dal;
 
 import entity.ClassSubjectMapping;
-import entity.Class;
+import entity.Group;
 import entity.Subject;
 import entity.Session;
 import entity.Instructor;
@@ -27,12 +27,13 @@ public class SessionDBContext extends DBContext<Session> {
     public ArrayList<Session> getSessionsByInstrucor (String instructor_id, Date from, Date to) {
         ArrayList<Session> sessions = new ArrayList<>();
         try {
-            String sql = "SELECT s.scheid,s.date,r.roomid,t.tid,t.tname,g.gid,g.gname,su.subid,subname,i.iid,i.iname,s.isAtt,c.cname \n"
-                    + "FROM [Schedule] s INNER JOIN [Instructor] i ON i.iid = s.iid\n"
-                    + "				INNER JOIN [Class_subject_mapping] g ON g.gid = s.gid\n"
-                    + "				INNER JOIN [Subject] su ON g.subid = su.subid\n"
-                    + "                         INNER JOIN [Campus] c ON i.cid = c.cid\n"
-                    + "		WHERE i.iid = ? AND s.[date] >= ? AND s.[date] <= ?";
+            String sql = "SELECT i.instructor_id, i.instructor_name, su.subject_name, c.class_name, c.link_url,"
+                    + " s.session_id, s.session_index, s.ses_date, s.isAtt \n"
+                    + " FROM Session s INNER JOIN Class_subject_mapping csm ON csm.class_id = s.class_id\n"
+                    + "				INNER JOIN Instructor i ON i.instructor_id = csm.instructor_id\n"
+                    + "				INNER JOIN Class c ON c.class_id = csm.class_id\n"
+                    + "				INNER JOIN Subject su ON su.subject_id = csm.subject_id\n"
+                    + "		WHERE i.instructor_id = ? AND s.ses_date >= ? AND s.ses_date <= ?";
             PreparedStatement stm = connection.prepareStatement(sql);
             stm.setString(1, instructor_id);
             stm.setDate(2, from);
@@ -50,11 +51,11 @@ public class SessionDBContext extends DBContext<Session> {
                 ClassSubjectMapping csm = new ClassSubjectMapping();
                 csm.setCsm_id(rs.getInt("csm_id"));
                 session.getCsm();
-                Class classes = new Class();
-                classes.setClass_id(rs.getString("class_id"));
-                classes.setClass_name(rs.getString("class_name"));
-                classes.setLink_url(rs.getString("link_url"));
-                session.getClasses();
+                Group group = new Group();
+                group.setGroup_id(rs.getString("class_id"));
+                group.setGroup_name(rs.getString("class_name"));
+                group.setLink_url(rs.getString("link_url"));
+                session.getGroup();
                 Subject subject = new Subject();
                 subject.setSubject_id(rs.getString("subject_id"));
                 subject.setSubject_name(rs.getString("subject_name"));
@@ -70,12 +71,14 @@ public class SessionDBContext extends DBContext<Session> {
     public ArrayList<Session> getSessionsByStudent (String student_id, Date from, Date to) {
         ArrayList<Session> sessions = new ArrayList<>();
         try {
-            String sql = "SELECT s.scheid,s.date,r.roomid,t.tid,t.tname,g.gid,g.gname,su.subid,subname,i.iid,i.iname,s.isAtt,c.cname \n"
-                    + "FROM [Schedule] s INNER JOIN [Instructor] i ON i.iid = s.iid\n"
-                    + "				INNER JOIN [Class_subject_mapping] g ON g.gid = s.gid\n"
-                    + "				INNER JOIN [Subject] su ON g.subid = su.subid\n"
-                    + "                         INNER JOIN [Campus] c ON i.cid = c.cid\n"
-                    + "		WHERE i.iid = ? AND s.[date] >= ? AND s.[date] <= ?";
+            String sql = "SELECT stu.student_id, stu.student_name, su.subject_name, c.class_name, c.link_url,"
+                    + " s.session_id, s.session_index, s.ses_date, s.isAtt \n"
+                    + "FROM Session s INNER JOIN Class_subject_mapping csm ON csm.class_id = s.class_id\n"
+                    + "				INNER JOIN Attendance a ON a.session_id = s.session_id\n"
+                    + "				INNER JOIN Student stu ON stu.student_id = a.student_id\n"
+                    + "				INNER JOIN Class c ON c.class_id = csm.class_id\n"
+                    + "				INNER JOIN Subject su ON su.subject_id = csm.subject_id\n"
+                    + "		WHERE stu.student_id = ? AND s.ses_date >= ? AND s.ses_date <= ?";
             PreparedStatement stm = connection.prepareStatement(sql);
             stm.setString(1, student_id);
             stm.setDate(2, from);
@@ -93,11 +96,11 @@ public class SessionDBContext extends DBContext<Session> {
                 ClassSubjectMapping csm = new ClassSubjectMapping();
                 csm.setCsm_id(rs.getInt("csm_id"));
                 session.getCsm();
-                Class classes = new Class();
-                classes.setClass_id(rs.getString("class_id"));
-                classes.setClass_name(rs.getString("class_name"));
-                classes.setLink_url(rs.getString("link_url"));
-                session.getClasses();
+                Group group = new Group();
+                group.setGroup_id(rs.getString("class_id"));
+                group.setGroup_name(rs.getString("class_name"));
+                group.setLink_url(rs.getString("link_url"));
+                session.getGroup();
                 Subject subject = new Subject();
                 subject.setSubject_id(rs.getString("subject_id"));
                 subject.setSubject_name(rs.getString("subject_name"));
@@ -112,6 +115,46 @@ public class SessionDBContext extends DBContext<Session> {
             Logger.getLogger(SessionDBContext.class.getName()).log(Level.SEVERE, null, ex);
         }
         return sessions;
+    }
+    
+    public void addAttendances(Session ses) {
+        try {
+            connection.setAutoCommit(false);
+            String sql_update_isAtt = "UPDATE Session SET isAtt = 1 WHERE session_id =?";
+            PreparedStatement stm_update_isAtt = connection.prepareStatement(sql_update_isAtt);
+            stm_update_isAtt.setInt(1, ses.getSession_id());
+            stm_update_isAtt.executeUpdate();
+
+            String sql_remove_atts = "DELETE Attendance WHERE session_id =?";
+            PreparedStatement stm_remove_atts = connection.prepareStatement(sql_remove_atts);
+            stm_remove_atts.setInt(1, ses.getSession_id());
+            stm_remove_atts.executeUpdate();
+            
+            String insertAttendanceQuery = "INSERT INTO Attendance (session_id, student_id, status, att_description, att_datetime) "
+                    + "VALUES (?, ?, ?, ?,NOW())";
+            PreparedStatement insertAttendanceStmt = connection.prepareStatement(insertAttendanceQuery);
+            for (Attendance att : ses.getAtts()) {
+                insertAttendanceStmt.setInt(1, ses.getSession_id());
+                insertAttendanceStmt.setString(2, att.getStudent().getStudent_id());
+                insertAttendanceStmt.setBoolean(3, att.isStatus());
+                insertAttendanceStmt.setString(4, att.getAtt_description());
+                insertAttendanceStmt.executeUpdate();
+            }
+            connection.commit();         
+        } catch (SQLException ex) {
+            try {
+                connection.rollback();
+                Logger.getLogger(SessionDBContext.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (SQLException ex1) {
+                Logger.getLogger(SessionDBContext.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException ex) {
+                Logger.getLogger(SessionDBContext.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     @Override

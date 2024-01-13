@@ -10,35 +10,35 @@ import java.util.ArrayList;
  *
  * @author leduy
  */
-public class Class extends BaseEntity {
+public class Group extends BaseEntity {
     private ArrayList<Session> sessions = new ArrayList<>();
-    private String class_id;
-    private String class_name;
+    private String group_id;
+    private String group_name;
     private String link_url;
 
-    public Class() {
+    public Group() {
     }
 
-    public Class(String class_id, String class_name, String link_url) {
-        this.class_id = class_id;
-        this.class_name = class_name;
+    public Group(String class_id, String class_name, String link_url) {
+        this.group_id = class_id;
+        this.group_name = class_name;
         this.link_url = link_url;
     }
 
-    public String getClass_id() {
-        return class_id;
+    public String getGroup_id() {
+        return group_id;
     }
 
-    public void setClass_id(String class_id) {
-        this.class_id = class_id;
+    public void setGroup_id(String group_id) {
+        this.group_id = group_id;
     }
 
-    public String getClass_name() {
-        return class_name;
+    public String getGroup_name() {
+        return group_name;
     }
 
-    public void setClass_name(String class_name) {
-        this.class_name = class_name;
+    public void setGroup_name(String group_name) {
+        this.group_name = group_name;
     }
 
     public String getLink_url() {

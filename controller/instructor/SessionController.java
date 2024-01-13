@@ -4,17 +4,13 @@
  */
 package controller.instructor;
 
-import controller.authentication.BasedAuthorizationController;
-import controller.authentication.BasedRequiredAuthenticationController;
-import dal.ScheduleDBContext;
-import dal.TimeSlotDBContext;
+//import controller.authentication.BasedAuthorizationController;
+//import controller.authentication.BasedRequiredAuthenticationController;
+import dal.SessionDBContext;
 import dal.AccountDBContext;
-import dal.CampusDBContext;
-import entity.Schedule;
+import entity.Session;
 import entity.Account;
-import entity.Campus;
 import entity.Role;
-import entity.TimeSlot;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -33,7 +29,7 @@ import util.DateTimeHelper;
  *
  * @author Admin
  */
-public class ScheduleController extends BasedAuthorizationController {
+public class SessionController extends HttpServlet { //extends BasedAuthorizationController {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -44,20 +40,19 @@ public class ScheduleController extends BasedAuthorizationController {
      * @throws ServletException if a servlet-specific error occurs
      * @throws IOException if an I/O error occurs
      */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response, String instructor_id)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         Account loggedUser = (Account) session.getAttribute("account");
 
         if (loggedUser != null) {
-            String aname = loggedUser.getName();
+            String username = loggedUser.getUsername();
             AccountDBContext dbContext = new AccountDBContext();
-            ArrayList<Account> accountList = dbContext.getIid(aname);
+            ArrayList<Account> accountList = dbContext.getAccountIdByUsername(username);
 
-            int instructorid = -1; // Default value if not found
             for (Account account : accountList) {
                 if (account.getInstructor() != null) {
-                    instructorid = account.getInstructor().getId();
+                    instructor_id = account.getInstructor().getInstructor_id();
                     break;
                 }
             }
@@ -72,57 +67,32 @@ public class ScheduleController extends BasedAuthorizationController {
                 try {
                     dates = DateTimeHelper.getSqlDatesInRange(r_from, r_to);
                 } catch (ParseException ex) {
-                    Logger.getLogger(ScheduleController.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(SessionController.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
 
-            CampusDBContext campDB = new CampusDBContext();
-            ArrayList<Campus> campusIns = campDB.listbyIns(instructorid);
+            SessionDBContext sesDB = new SessionDBContext();
+            ArrayList<Session> sessions = sesDB.getSessionsByInstrucor(instructor_id, dates.get(0), dates.get(dates.size() - 1));
 
-            TimeSlotDBContext timeDB = new TimeSlotDBContext();
-            ArrayList<TimeSlot> slots = timeDB.list();
-
-            ScheduleDBContext scheDB = new ScheduleDBContext();
-            ArrayList<Schedule> schedules = scheDB.getSchedules(instructorid, dates.get(0), dates.get(dates.size() - 1));
-
-            request.setAttribute("slots", slots);
             request.setAttribute("dates", dates);
-            request.setAttribute("campusIns", campusIns);
             request.setAttribute("from", dates.get(0));
             request.setAttribute("to", dates.get(dates.size() - 1));
-            request.setAttribute("schedules", schedules);
+            request.setAttribute("sessions", sessions);
         }
 
-        request.getRequestDispatcher("../view/instructor/lecturerHome.jsp").forward(request, response);
+        request.getRequestDispatcher("...").forward(request, response);
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response, Account account,ArrayList<Role> roles)//, Account account)
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        processRequest(request, response, null);
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response, Account account,ArrayList<Role> roles)
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        processRequest(request, response, null);
     }
 
     /**
@@ -134,5 +104,4 @@ public class ScheduleController extends BasedAuthorizationController {
     public String getServletInfo() {
         return "Short description";
     }// </editor-fold>
-
 }

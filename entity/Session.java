@@ -20,9 +20,10 @@ public class Session extends BaseEntity {
     private Instructor instructor;
     private Student student;
     private Attendance attendance;
-    private Class classes;
+    private Group group;
     private ClassSubjectMapping csm;
     private Subject subject;
+    private ArrayList<Attendance> atts = new ArrayList<>();
     
     public Session() {
     }
@@ -33,6 +34,14 @@ public class Session extends BaseEntity {
         this.session_date = session_date;
         this.class_id = class_id;
         this.isAtt = isAtt;
+    }
+
+    public ArrayList<Attendance> getAtts() {
+        return atts;
+    }
+
+    public void setAtts(ArrayList<Attendance> atts) {
+        this.atts = atts;
     }
 
     public Instructor getInstructor() {
@@ -59,12 +68,12 @@ public class Session extends BaseEntity {
         this.attendance = attendance;
     }
 
-    public Class getClasses() {
-        return classes;
+    public Group getGroup() {
+        return group;
     }
 
-    public void setClasses(Class classes) {
-        this.classes = classes;
+    public void setGroup(Group group) {
+        this.group = group;
     }
 
     public ClassSubjectMapping getCsm() {

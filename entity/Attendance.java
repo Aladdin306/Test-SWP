@@ -12,13 +12,14 @@ import java.util.Date;
  * @author leduy
  */
 public class Attendance extends BaseEntity {
-    private ArrayList<Session> sessions = new ArrayList<>();
     private int att_id;
     private String student_id;
     private int session_id;
     private boolean status;
     private Date att_datetime;
     private String att_description;
+    private Student student;
+    private Session session;
 
     public Attendance() {
     }
@@ -30,6 +31,22 @@ public class Attendance extends BaseEntity {
         this.status = status;
         this.att_datetime = att_datetime;
         this.att_description = att_description;
+    }
+
+    public Student getStudent() {
+        return student;
+    }
+
+    public void setStudent(Student student) {
+        this.student = student;
+    }
+
+    public Session getSession() {
+        return session;
+    }
+
+    public void setSession(Session session) {
+        this.session = session;
     }
 
     public int getAtt_id() {

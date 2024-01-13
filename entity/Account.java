@@ -10,8 +10,21 @@ package entity;
  */
 public class Account extends BaseEntity {
     private int role_id;
-    private String username;
+    private String username, student_id, instructor_id;
     private String password;
+    private Instructor instructor;
+
+    public Account(String username, String password, int role_id) {
+        this.username = username;
+        this.password = password;
+        this.role_id = role_id;
+    }
+
+    public Account(String student_id, String instructor_id) {
+        this.student_id = student_id;
+        this.instructor_id = instructor_id;
+    }
+    
 
     public Account() {
     }
@@ -20,6 +33,31 @@ public class Account extends BaseEntity {
         this.role_id = role_id;
         this.username = username;
         this.password = password;
+    }
+
+    public String getStudent_id() {
+        return student_id;
+    }
+
+    public void setStudent_id(String student_id) {
+        this.student_id = student_id;
+    }
+
+    public String getInstructor_id() {
+        return instructor_id;
+    }
+
+    public void setInstructor_id(String instructor_id) {
+        this.instructor_id = instructor_id;
+    }
+    
+
+    public Instructor getInstructor() {
+        return instructor;
+    }
+
+    public void setInstructor(Instructor instructor) {
+        this.instructor = instructor;
     }
 
     public int getRole_id() {
