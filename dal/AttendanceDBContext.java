@@ -23,24 +23,24 @@ import java.util.logging.Logger;
  */
 public class AttendanceDBContext extends DBContext<Attendance> {
 
-    public ArrayList<Attendance> getAttendances(int scheid) {
+    public ArrayList<Attendance> getAttendances(int session_id) {
         ArrayList<Attendance> atts = new ArrayList<>();
         try {
             String sql = "SELECT \n"
                     + "    s.student_id, \n"
                     + "    s.student_name, \n"
-                    + "    IFNULL(a.status, 0) AS [status], \n"
+                    + "    IFNULL(a.status, 0) AS status, \n"
                     + "    IFNULL(a.att_description, 'nothing') AS att_description, \n"
-                    + "    IFNULL(a.att_datetime, GETDATE()) AS att_datetime, \n"
+                    + "    IFNULL(a.att_datetime, NOW()) AS att_datetime, \n"
                     + "    a.session_id\n"
                     + "FROM Session ses \n"
                     + "INNER JOIN Class_subject_mapping csm ON csm.class_id = s.class_id\n"
-                    + "INNER JOIN [Attendance] a ON a.session_id = ses.session_id\n"
-                    + "INNER JOIN [Student] stu ON stu.student_id = a.student_id\n"
-                    + "INNER JOIN [Class] c ON c.class_id = csm.class_id\n"
+                    + "INNER JOIN Attendance a ON a.session_id = ses.session_id\n"
+                    + "INNER JOIN Student stu ON stu.student_id = a.student_id\n"
+                    + "INNER JOIN Class c ON c.class_id = csm.class_id\n"
                     + "WHERE ses.session_id = ?";
             PreparedStatement stm = connection.prepareStatement(sql);
-            stm.setInt(1, scheid);
+            stm.setInt(1, session_id);
             ResultSet rs = stm.executeQuery();
             while (rs.next()) {
                 Attendance att = new Attendance();

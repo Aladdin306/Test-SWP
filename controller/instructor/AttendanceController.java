@@ -25,7 +25,7 @@ import java.util.ArrayList;
  *
  * @author Admin
  */
-public class AttendanceController{// extends BasedAuthorizationController {
+public class AttendanceController extends HttpServlet {// extends BasedAuthorizationController {
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**
@@ -37,20 +37,20 @@ public class AttendanceController{// extends BasedAuthorizationController {
      * @throws IOException if an I/O error occurs
      */
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response, Account account,ArrayList<Role> roles)
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        ScheduleDBContext scheDB = new ScheduleDBContext();
-        Schedule s = new Schedule();
+        SessionDBContext sesDB = new SessionDBContext();
+        Session s = new Session();
         int id = Integer.parseInt(request.getParameter("id"));
-        s.setId(id);
-        Schedule sche = scheDB.get(s);
-        request.setAttribute("sche", sche);
+        s.setSession_id(id);
+        Session ses = sesDB.get(s);
+        request.setAttribute("ses", ses);
 
         AttendanceDBContext attDB = new AttendanceDBContext();
         ArrayList<Attendance> attendances = attDB.getAttendances(id);
 
         request.setAttribute("atts", attendances);
-        request.getRequestDispatcher("../view/instructor/attendance.jsp").forward(request, response);
+        request.getRequestDispatcher("...").forward(request, response);
     }
 
     /**
@@ -62,27 +62,27 @@ public class AttendanceController{// extends BasedAuthorizationController {
      * @throws IOException if an I/O error occurs
      */
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response, Account account,ArrayList<Role> roles)
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String[] stuids = request.getParameterValues("stuid");
-        Schedule sche = new Schedule();
-        sche.setId(Integer.parseInt(request.getParameter("scheid")));
+        String[] stuids = request.getParameterValues("student_id");
+        Session ses = new Session();
+        ses.setSession_id(Integer.parseInt(request.getParameter("session_id")));
         ArrayList<Attendance> atts = new ArrayList<>();
-        for (String stuid : stuids) {
-            int id = Integer.parseInt(stuid);
+        for (String stu_id : stuids) {
+            String student_id = stu_id;
             Attendance a = new Attendance();
             Student s = new Student();
-            s.setId(id);
+            s.setStudent_id(student_id);
             a.setStudent(s);
-            a.setSchedule(sche);
-            a.setDescription(request.getParameter("description" + stuid));
-            a.setStatus(request.getParameter("status" + stuid).equals("Attended"));
+            a.setSession(ses);
+            a.setAtt_description(request.getParameter("att_description" + stu_id));
+            a.setStatus(request.getParameter("status" + stu_id).equals("Attended"));
             atts.add(a);
         }
-        sche.setAtts(atts);
-        ScheduleDBContext scheDB = new ScheduleDBContext();
-        scheDB.addAttendances(sche);
-        String id = request.getParameter("scheid");
+        ses.setAtts(atts);
+        SessionDBContext sesDB = new SessionDBContext();
+        sesDB.addAttendances(ses);
+        String id = request.getParameter("session_id");
         response.sendRedirect("attended?id=" + id);
     }
 
